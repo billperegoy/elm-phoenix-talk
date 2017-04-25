@@ -1,0 +1,119 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>reveal.js</title>
+
+    <link rel="stylesheet" href="css/reveal.css">
+    <link rel="stylesheet" href="css/theme/black.css">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="lib/css/zenburn.css">
+
+    <!-- Printing and PDF exports -->
+    <script>
+      var link = document.createElement( 'link' );
+      link.rel = 'stylesheet';
+      link.type = 'text/css';
+      link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+      document.getElementsByTagName( 'head' )[0].appendChild( link );
+    </script>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section>
+          <h2>Integrating Phoenix Channels with Elm</h1>
+          <h4>Bill Peregoy</h4>
+          <h4><a href="https://twitter.com/billperegoy">@billperegoy</a></h4>
+
+        </section>
+        <section>
+          <h2>Why Phoenix/Elixir?</h2>
+          <ul>
+            <li>Elixir is a cool functional language</li>
+            <li>Phoenix framework leverages the functional paradigm</li>
+            <li>Phoenix is super fast</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>But the Killer Phoenix Feature is...</h2>
+          <h2 class="fragment">Channels</h2>
+        </section>
+
+        <section>
+          <h2>Phoenix Channels</h2>
+          <ul>
+            <li class="fragment">Support persistent network conections</li>
+            <li class="fragment">Allow asynchronous communication</li>
+            <li class="fragment">Very Lightweight</li>
+            <li class="fragment">Support massive number of connections</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>My Problem</h2>
+        </section>
+
+        <section>
+          <h2>Enter Dividasaurus</h2>
+            <ul>
+              <li>Allow mutiple users to interact in realtime</li>
+              <li>Provide instant notifications of selections</li>
+              <li>Keep track of turns</li>
+            </ul>
+        </section>
+
+        <section>
+          <h2>Phoenix Channel Overview</h2>
+            <ul>
+              <li>Client sends synchronous events to server</li>
+              <li>Server can respond asyncronously to client</li>
+              <li>Server canalso broadcast to multiple clients</li>
+            </ul>
+        </section>
+
+        <section>
+          <h2>Channel Terminology</h2>
+            <ul>
+              <li>Topic/Subtopic - represents a communication type</li>
+              <li>Subscriptions - clients pick which topics to listen to</li>
+              <li>Events - represent message communication types</li>
+            </ul>
+        </section>
+
+        <section>
+          <h2>Dividasaurus Needs</h2>
+            <ul>
+              <li>Initially populate list of tickets</li>
+              <li>Initially provide active user</li>
+              <li>Allow client to send event upon choosing a ticket</li>
+              <li>Server broadcasts ticket choice to all clients</li>
+              <li>Server broadcasts new active user after each pick</li>
+            </ul>
+        </section>
+      </div>
+    </div>
+
+    <script src="lib/js/head.min.js"></script>
+    <script src="js/reveal.js"></script>
+
+    <script>
+      // More info https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        history: true,
+
+        // More info https://github.com/hakimel/reveal.js#dependencies
+        dependencies: [
+          { src: 'plugin/markdown/marked.js' },
+          { src: 'plugin/markdown/markdown.js' },
+          { src: 'plugin/notes/notes.js', async: true },
+          { src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } }
+        ]
+      });
+    </script>
+  </body>
+</html>
