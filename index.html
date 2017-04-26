@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-    <title>reveal.js</title>
+    <title>Integrating Phoenix Channels with Elm</title>
 
     <link rel="stylesheet" href="css/reveal.css">
     <link rel="stylesheet" href="css/theme/black.css">
@@ -95,6 +95,106 @@
               <li>Server broadcasts new active user after each pick</li>
             </ul>
         </section>
+
+        <section>
+          <h2>Elm Data Model</h2>
+          <pre><code class="haskell" data-trim contenteditable>
+            type alias Group =
+                { id : Int
+                , name : String
+                , activeUser : Int
+                }
+
+            type alias Ticket =
+                { id : Int
+                , date : String
+                , opponent : String
+                , time : String
+                , userId : Maybe Int
+                }
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>Enabling Elixir Channels</h2>
+          <pre><code class="elixir" data-trim contenteditable>
+            # web/channels/user_socket.ex
+            defmodule Dividasaurus.UserSocket do
+              use Phoenix.Socket
+
+              # Channels
+              channel  "dividasaurus:*", Dividasaurus.TicketChannel
+              ...
+            end
+          </code></pre>
+          <p style="text-align: left";>
+            This tells Phoenix to accept events from any subtopic of the </i>dividasaurus</i> topic.
+          </p>
+        </section>
+
+        <section>
+          <h2>JSON Channel Event Data</h2>
+          <p style="text-align: left";>
+          A Phoenix event of type <i>ticket_select</i> expects to be sent with
+          this JSON data format.
+          </p>
+          <pre><code class="json" data-trim contenteditable>
+            {"user_id" : user_id,
+             "ticket_id" : ticket_id,
+             "group_name" :  group_name
+            }
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>Accepting Channel Subscriptions</h2>
+          <pre><code class="elixir" data-trim contenteditable>
+            # web/channels/ticket_channel.rb
+            def join("dividasaurus:tickets", _payload, socket) do
+              {:ok, socket}
+            end
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>Handling Channel Events</h2>
+          <pre><code class="elixir" data-trim contenteditable>
+            # web/channels/ticket_channel.rb
+            def handle_in("ticket_select",
+                          %{"user_id" => user_id,
+                            "ticket_id" => ticket_id,
+                            "group_name" => group_name},
+                             socket) do
+              result = update_ticket_with_new_user(ticket_id, user_id)
+
+              case result do
+                {:ok, _} ->
+                  broadcast_updated_ticket(socket, ticket_id)
+                  broadcast_new_active_user(socket, group_name)
+              end
+            end
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>Broadcasting Results</h2>
+          <pre><code class="elixir" data-trim contenteditable>
+            # web/channels/ticket_channel.rb
+            defp broadcast_updated_ticket(socket, ticket_id) do
+              # Return the updated ticket to all clients
+              ticket = Repo.get(Ticket, ticket_id)
+                       |> Map.drop([:user])
+              broadcast! socket, "ticket_select", ticket 
+            end
+
+            defp broadcast_new_active_user(socket, groupName) do
+              # Return the updated active user to all clients
+              new_active_user = update_active_user(groupName)
+              broadcast! socket, "active_user", %{id: new_active_user}
+            end
+          </code></pre>
+        </section>
+
       </div>
     </div>
 
