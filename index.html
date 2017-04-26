@@ -116,6 +116,55 @@
         </section>
 
         <section>
+          <h1>Data Flow</h1>
+        </section>
+
+        <section>
+          <h2>Client Initiates Request</h2>
+          <p style="text-align: left";>
+          Client sends event of type <i>ticket_select</i> with this JSON data
+          format.
+          </p>
+          <pre><code class="json" data-trim contenteditable>
+            { "user_id" : user_id,
+              "ticket_id" : ticket_id,
+              "group_name" :  group_name
+            }
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>Server Ticket Response</h2>
+          <p style="text-align: left";>
+          Broadcasts event of type <i>ticket_select</i> with this JSON data
+          format.
+          </p>
+          <pre><code class="json" data-trim contenteditable>
+                { "id" : id,
+                  "date" : date,
+                  "opponent" : opponent,
+                  "time" : time,
+                  "user_id" : user_id,
+                }
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>Server Active User Response</h2>
+          <p style="text-align: left";>
+          Also brodcasts event of type <i>active_user</i> with this JSON data
+          format.
+          </p>
+          <pre><code class="json" data-trim contenteditable>
+            { "id" : active_user_id }
+          </code></pre>
+        </section>
+
+        <section>
+          <h1>Phoenix Code</h1>
+        </section>
+
+        <section>
           <h2>Enabling Elixir Channels</h2>
           <pre><code class="elixir" data-trim contenteditable>
             # web/channels/user_socket.ex
@@ -130,20 +179,6 @@
           <p style="text-align: left";>
             This tells Phoenix to accept events from any subtopic of the </i>dividasaurus</i> topic.
           </p>
-        </section>
-
-        <section>
-          <h2>JSON Channel Event Data</h2>
-          <p style="text-align: left";>
-          A Phoenix event of type <i>ticket_select</i> expects to be sent with
-          this JSON data format.
-          </p>
-          <pre><code class="json" data-trim contenteditable>
-            {"user_id" : user_id,
-             "ticket_id" : ticket_id,
-             "group_name" :  group_name
-            }
-          </code></pre>
         </section>
 
         <section>
@@ -163,8 +198,9 @@
             def handle_in("ticket_select",
                           %{"user_id" => user_id,
                             "ticket_id" => ticket_id,
-                            "group_name" => group_name},
-                             socket) do
+                            "group_name" => group_name
+                           },
+                           socket) do
               result = update_ticket_with_new_user(ticket_id, user_id)
 
               case result do
@@ -183,7 +219,6 @@
             defp broadcast_updated_ticket(socket, ticket_id) do
               # Return the updated ticket to all clients
               ticket = Repo.get(Ticket, ticket_id)
-                       |> Map.drop([:user])
               broadcast! socket, "ticket_select", ticket 
             end
 
