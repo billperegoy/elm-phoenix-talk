@@ -72,7 +72,7 @@
             <ul>
               <li>Client sends synchronous events to server</li>
               <li>Server can respond asyncronously to client</li>
-              <li>Server canalso broadcast to multiple clients</li>
+              <li>Server can also broadcast to multiple clients</li>
             </ul>
         </section>
 
@@ -229,6 +229,128 @@
             end
           </code></pre>
         </section>
+
+        <section>
+          <h2>Phoenix Socket Summary</h2>
+          <ul>
+            <li class="fragment">Enable specific channel sockets in user_channel.ex</li>
+            <li class="fragment">Provide <i>join()</i> function for each topic/subtopic</li>
+            <li class="fragment">Provide <i>handle_in()</i> function for each event type</li>
+          </ul>
+        </section>
+
+        <section>
+          <h1>Elm Code</h1>
+        </section>
+
+        <section>
+          <h2>Model Setup</h2>
+          <p>use elm-phoenix-socket package (<a
+            href="http://package.elm-lang.org/packages/fbonetti/elm-phoenix-socket/latest">fbonetti/elm-phoenix-socket</a>)</p>
+          <pre><code class="haskell" data-trim contenteditable>
+            import Phoenix.Socket
+
+            type alias Model =
+                { ...
+                , phxSocket : Phoenix.Socket.Socket Msg
+                }
+
+            init =
+                {  ...
+                , phxSocket = initPhoenixSocket
+                }
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>Initialize the Model</h2>
+          <pre><code class="haskell" data-trim contenteditable>
+
+            initPhoenixSocket : Phoenix.Socket.Socket Msg
+            initPhoenixSocket =
+                Phoenix.Socket.init "ws://localhost:4000/socket/websocket"
+                    |> Phoenix.Socket.withDebug
+                    |> Phoenix.Socket.on
+                        "select_ticket"
+                        "dividasaurus:tickets"
+                        ReceiveTicketMessage
+                    |> Phoenix.Socket.on
+                        "active_user"
+                        "dividasaurus:tickets"
+                        ReceiveActiveUserMessage
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>Setup Subscriptions</h2>
+          <pre><code class="haskell" data-trim contenteditable>
+            subscriptions : Model -> Sub Msg
+            subscriptions model =
+                Phoenix.Socket.listen model.phxSocket PhoenixMsg
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>Setup Elm Message Types</h2>
+          <pre><code class="haskell" data-trim contenteditable>
+            type Msg
+                = ...
+                | PhoenixMsg (Phoenix.Socket.Msg Msg)
+                | JoinChannel
+                | SendMessage Int Int String
+                | ReceiveTicketMessage Json.Encode.Value
+                | ReceiveActiveUserMessage Json.Encode.Value
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>Elm Update Functions</h2>
+          <ul>
+            <li>This action is invoked by the subscription</li>
+            <li>It listens and processes channel events</li>
+          </ul>
+          <pre><code class="haskell" data-trim contenteditable>
+            PhoenixMsg model msg ->
+                let
+                    ( phxSocket, phxCmd ) =
+                        Phoenix.Socket.update msg model.phxSocket
+                in
+                    ( { model | phxSocket = phxSocket }
+                    , Cmd.map PhoenixMsg phxCmd
+                    )
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>Elm Update Functions</h2>
+          <pre><code class="haskell" data-trim contenteditable>
+            JoinChannel ->
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>Elm Update Functions</h2>
+          <pre><code class="haskell" data-trim contenteditable>
+            SendMessage ticketId userId groupName ->
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>Elm Update Functions</h2>
+          <pre><code class="haskell" data-trim contenteditable>
+            ReceiveTicketMessage message ->
+
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>Elm Update Functions</h2>
+          <pre><code class="haskell" data-trim contenteditable>
+            ReceiveActiveUserMessage message ->
+
+          </code></pre>
+        </section>
+
 
       </div>
     </div>
