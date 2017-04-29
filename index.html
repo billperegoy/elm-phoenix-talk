@@ -219,7 +219,7 @@
             defp broadcast_updated_ticket(socket, ticket_id) do
               # Return the updated ticket to all clients
               ticket = Repo.get(Ticket, ticket_id)
-              broadcast! socket, "ticket_select", ticket 
+              broadcast! socket, "ticket_select", ticket
             end
 
             defp broadcast_new_active_user(socket, groupName) do
@@ -258,7 +258,10 @@
             init =
                 {  ...
                 , phxSocket = initPhoenixSocket
-                }
+                } ! [ Task.succeed JoinChannel
+                      |> Task.perform identity
+                    ]
+
           </code></pre>
         </section>
 
@@ -269,7 +272,6 @@
             initPhoenixSocket : Phoenix.Socket.Socket Msg
             initPhoenixSocket =
                 Phoenix.Socket.init "ws://localhost:4000/socket/websocket"
-                    |> Phoenix.Socket.withDebug
                     |> Phoenix.Socket.on
                         "select_ticket"
                         "dividasaurus:tickets"
@@ -291,6 +293,10 @@
         </section>
 
         <section>
+          <h1>Elm Update Functions</h1>
+        </section>
+
+        <section>
           <h2>Setup Elm Message Types</h2>
           <pre><code class="haskell" data-trim contenteditable>
             type Msg
@@ -298,13 +304,13 @@
                 | PhoenixMsg (Phoenix.Socket.Msg Msg)
                 | JoinChannel
                 | SendMessage Int Int String
-                | ReceiveTicketMessage Json.Encode.Value
-                | ReceiveActiveUserMessage Json.Encode.Value
+                | ReceiveTicketMessage Encode.Value
+                | ReceiveActiveUserMessage Encode.Value
           </code></pre>
         </section>
 
         <section>
-          <h2>Elm Update Functions</h2>
+          <h2>Socket Setup</h2>
           <ul>
             <li>This action is invoked by the subscription</li>
             <li>It listens and processes channel events</li>
@@ -322,35 +328,182 @@
         </section>
 
         <section>
-          <h2>Elm Update Functions</h2>
+          <h2>Join Channel</h2>
+          <p>This action is invoked at application startup to join the required
+          channels</p>
           <pre><code class="haskell" data-trim contenteditable>
             JoinChannel ->
+                let
+                    channel =
+                        Phoenix.Channel.init "dividasaurus:tickets"
+
+                    ( phxSocket, phxCmd ) =
+                        Phoenix.Socket.join channel model.phxSocket
+                in
+                    ( { model | phxSocket = phxSocket }
+                    , Cmd.map PhoenixMsg phxCmd
+                    )
           </code></pre>
         </section>
 
         <section>
-          <h2>Elm Update Functions</h2>
+          <h2>Send Ticket Info on Channel</h2>
           <pre><code class="haskell" data-trim contenteditable>
             SendMessage ticketId userId groupName ->
+                let
+                    payload = encodeObject userId ticketId groupName
+
+                    push_ =
+                        Phoenix.Push.init "select_ticket" "dividasaurus:tickets"
+                            |> Phoenix.Push.withPayload payload
+
+                    ( phxSocket, phxCmd ) =
+                        Phoenix.Socket.push push_ model.phxSocket
+                in
+                    { model | phxSocket = phxSocket }
+                        ! [ Cmd.map PhoenixMsg phxCmd ]
           </code></pre>
         </section>
 
         <section>
-          <h2>Elm Update Functions</h2>
+          <h2>Encode Send Packet</h2>
+          <pre><code class="haskell" data-trim contenteditable>
+            sendMessage model ticketId userId groupName =
+                (Encode.object
+                    [ ( "user_id", Encode.int userId )
+                    , ( "ticket_id", Encode.int ticketId )
+                    , ( "group_name", Encode.string groupName )
+                    ]
+                )
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>Receive Ticket Update</h2>
           <pre><code class="haskell" data-trim contenteditable>
             ReceiveTicketMessage message ->
+                let
+                    ticket = TicketDecoder.fromEncodeValue message
+
+                    newTickets =
+                        Ticket.Utils.update ticket model.tickets
+
+                    owner =
+                        User.Utils.nameFromId model.users ticket.userId
+
+                    flash = Ticket.Utils.selectMessage ticket owner
+                in
+                    { model | tickets = newTickets }
+                        ! [ createFlashElement flash "info" 20 ]
 
           </code></pre>
         </section>
 
         <section>
-          <h2>Elm Update Functions</h2>
+          <h2>Receive Current User</h2>
           <pre><code class="haskell" data-trim contenteditable>
             ReceiveActiveUserMessage message ->
+                let
+                    activeUser =
+                        ActiveUserDecoder.fromEncodeValue message
+                            |> .id
 
+                    nextUserName =
+                        User.Utils.nameFromId model.users
+                        (Just activeUser)
+
+                in
+                    { model | currentUser = activeUser }
+                        ! [ createFlashElement
+                               ("Next user is " ++ nextUserName)
+                                "info" 20 ]
           </code></pre>
         </section>
 
+        <section>
+          <h2>Sending to the Channel</h2>
+          <pre><code class="haskell" data-trim contenteditable>
+            if myTurn then
+                a
+                    [ onClick
+                        (SendMessage ticket.id myUserId groupName)
+                    , href "#"
+                    ]
+                    [ innerDiv
+                    ]
+            else
+                innerDiv
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>View Updates</h2>
+          <ul>
+            <li>Channel responses update the model</li>
+            <li>Model updates are reflected in the view</li>
+            <li>No additional work required after update actions are processed</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Channels in Elm Summary</h2>
+          <ul>
+            <li>Most of the work is done by the <i>elm-phoenix-socket</i> package</li>
+            <li>All actions are handled through the standard Elm architecture</li>
+            <li>Subscriptions used to handle async events</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Deployemnt to Hroku</h2>
+          <ul>
+            <li>Phoenix deployment to Heroky is as easy as Rails</li>
+            <li>Just follow docs on Heroku site</li>
+            <li>Only challenge is getting Elm compiler into asset pipeline</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Phoenic Asset Pipeline</h2>
+          <ul>
+            <li>Phonenix uses <a href="http://brunch.io/">brunch</a> for its asset pipeline</li>
+            <li>Brunch comes preconfigured with Phoenix</li>
+            <li>Only one small change is needed to brunch config</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Brunch Configuration</h2>
+          <pre><code class="js" data-trim contenteditable>
+            elmBrunch: {
+              executablePath: '../node_modules/elm/binwrappers',
+              elmFolder: 'elm',
+              mainModules: ['src/Main.elm', 'src/*/*.elm'],
+              outputFolder: '../priv/static/js',
+              outputFile: 'bundle.js',
+              makeParameters: ['--warn']
+            }
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>Static Phoenix Page</h2>
+          <pre><code class="haskell" data-trim contenteditable>
+            &lt;html&gt;
+              &lt;head&gt;
+                &lt;script type=&quot;text/javascript&quot; src=&quot;js/bundle.js&quot;&gt;&lt;/script&gt;
+              &lt;/head&gt;
+              &lt;body&gt;
+                &lt;div id=&quot;elm-app&quot;&gt;&lt;/div&gt;
+
+                &lt;script type=&quot;text/javascript&quot;&gt;
+                  var elmDiv = document.getElementById('elm-app');
+                  Elm.Main.embed(elmDiv);
+                &lt;/script&gt;
+              &lt;/body&gt;
+            &lt;/html&gt;
+          </code></pre>
+        </section>
 
       </div>
     </div>
