@@ -61,6 +61,11 @@
 
         <section>
           <h2>Enter Dividasaurus</h2>
+          <img width="100%" src="images/dividasaurus.png"></img>
+        </section>
+
+        <section>
+          <h2>Dividasaurus Features</h2>
             <ul>
               <li>Allow mutiple users to interact in realtime</li>
               <li>Provide instant notifications of selections</li>
@@ -77,11 +82,6 @@
               <li>Server broadcasts ticket choice to all clients</li>
               <li>Server broadcasts new active user after each pick</li>
             </ul>
-        </section>
-
-        <section>
-          <h2>Application UI</h2>
-          <img width="100%" src="images/dividasaurus.png"></img>
         </section>
 
         <section>
@@ -189,6 +189,16 @@
           <p style="text-align: left";>
             This tells Phoenix to accept events from any subtopic of the </i>dividasaurus</i> topic.
           </p>
+        </section>
+
+        <section>
+          <h2>Phoenix Channel Callbacks</h2>
+          <ul>
+            <li>join()</li>
+            <li>terminate()</li>
+            <li>handle_in()</li>
+            <li>handle_out()</li>
+          </ul>
         </section>
 
         <section>
@@ -357,11 +367,39 @@
         </section>
 
         <section>
+          <h2>Sending to the Channel</h2>
+          <pre><code class="haskell" data-trim contenteditable>
+            if myTurn then
+                a
+                    [ onClick
+                        (SendMessage ticket.id myUserId groupName)
+                    , href "#"
+                    ]
+                    [ innerDiv
+                    ]
+            else
+                innerDiv
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>Encode Send Packet</h2>
+          <pre><code class="haskell" data-trim contenteditable>
+            encodeMessage model ticketId userId groupName =
+                Encode.object
+                    [ ( "user_id", Encode.int userId )
+                    , ( "ticket_id", Encode.int ticketId )
+                    , ( "group_name", Encode.string groupName )
+                    ]
+          </code></pre>
+        </section>
+
+        <section>
           <h2>Send Ticket Info on Channel</h2>
           <pre><code class="haskell" data-trim contenteditable>
             SendMessage ticketId userId groupName ->
                 let
-                    payload = encodeObject userId ticketId groupName
+                    payload = encodeMessage ticketId userId groupName
 
                     push_ =
                         Phoenix.Push.init "select_ticket" "dividasaurus:tickets"
@@ -372,18 +410,6 @@
                 in
                     { model | phxSocket = phxSocket }
                         ! [ Cmd.map PhoenixMsg phxCmd ]
-          </code></pre>
-        </section>
-
-        <section>
-          <h2>Encode Send Packet</h2>
-          <pre><code class="haskell" data-trim contenteditable>
-            sendMessage model ticketId userId groupName =
-                Encode.object
-                    [ ( "user_id", Encode.int userId )
-                    , ( "ticket_id", Encode.int ticketId )
-                    , ( "group_name", Encode.string groupName )
-                    ]
           </code></pre>
         </section>
 
@@ -430,22 +456,6 @@
         </section>
 
         <section>
-          <h2>Sending to the Channel</h2>
-          <pre><code class="haskell" data-trim contenteditable>
-            if myTurn then
-                a
-                    [ onClick
-                        (SendMessage ticket.id myUserId groupName)
-                    , href "#"
-                    ]
-                    [ innerDiv
-                    ]
-            else
-                innerDiv
-          </code></pre>
-        </section>
-
-        <section>
           <h2>View Updates</h2>
           <ul>
             <li>Channel responses update the model</li>
@@ -466,7 +476,7 @@
         <section>
           <h2>Deployemnt to Heroku</h2>
           <ul>
-            <li>Phoenix deployment to Heroky is as easy as Rails</li>
+            <li>Phoenix deployment to Heroku is as easy as Rails</li>
             <li>Just follow docs on Heroku site</li>
             <li>Only challenge is getting Elm compiler into asset pipeline</li>
           </ul>
@@ -475,7 +485,7 @@
         <section>
           <h2>Phoenix Asset Pipeline</h2>
           <ul>
-            <li>Phonenix uses <a href="http://brunch.io/">brunch</a> for its asset pipeline</li>
+            <li>Phoenix uses <a href="http://brunch.io/">brunch</a> for its asset pipeline</li>
             <li>Brunch comes preconfigured with Phoenix</li>
             <li>There is a brunch plugin for Elm compiles</li>
             <li>Only one small change is needed to brunch config</li>
@@ -528,7 +538,7 @@
         </section>
 
         <section>
-          <h1>Questions</h1>
+          <h1>Questions?</h1>
         </section>
 
       </div>
