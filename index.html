@@ -34,7 +34,8 @@
           <h2>Why Phoenix/Elixir?</h2>
           <ul>
             <li>Elixir is a cool functional language</li>
-            <li>Phoenix framework leverages the functional paradigm</li>
+            <li>Phoenix leverages the functional paradigm</li>
+            <li>Phoenix is much more explicit than Rails</li>
             <li>Phoenix is super fast</li>
           </ul>
         </section>
@@ -76,9 +77,9 @@
         <section>
           <h2>Dividasaurus Needs</h2>
             <ul>
-              <li>Initially populate list of tickets</li>
-              <li>Initially provide active user</li>
-              <li>Allow client to send event upon choosing a ticket</li>
+              <li>Initially populate list of tickets (REST API)</li>
+              <li>Initially provide active user (REST API)</li>
+              <li>Client sends channel event upon choosing a ticket</li>
               <li>Server broadcasts ticket choice to all clients</li>
               <li>Server broadcasts new active user after each pick</li>
             </ul>
@@ -91,10 +92,10 @@
         <section>
           <h2>Elm Data Model</h2>
           <pre><code class="haskell" data-trim contenteditable>
-            type alias Group =
-                { id : Int
-                , name : String
-                , activeUser : Int
+            type alias Group =                type alias User =
+                { id : Int                        { id : Int
+                , name : String                   , name : String
+                , activeUser : Int                }
                 }
 
             type alias Ticket =
@@ -147,7 +148,7 @@
           <h2>Server Ticket Response</h2>
           <p style="text-align: left";>
           Broadcasts event of type <i>ticket_select</i> with this JSON data
-          format.
+          format. All clients receive this broadcast.
           </p>
           <pre><code class="json" data-trim contenteditable>
                 { "id" : id,
@@ -264,9 +265,17 @@
         </section>
 
         <section>
+          <h1>Overview</h1>
+          <ul>
+            <li>Use Package: <a href="http://package.elm-lang.org/packages/fbonetti/elm-phoenix-socket/latest">fbonetti/elm-phoenix-socket</a></li>
+            <li>Join channel on app startup</li>
+            <li>Subscribe to event types during init</li>
+            <li>Use update action to send events to server</li>
+            <li>Subscriptions invoke actions on server response</li>
+          </ul>
+        </section>
+        <section>
           <h2>Model Setup</h2>
-          <p>use elm-phoenix-socket package (<a
-            href="http://package.elm-lang.org/packages/fbonetti/elm-phoenix-socket/latest">fbonetti/elm-phoenix-socket</a>)</p>
           <pre><code class="haskell" data-trim contenteditable>
             import Phoenix.Socket
 
@@ -375,10 +384,10 @@
                         (SendMessage ticket.id myUserId groupName)
                     , href "#"
                     ]
-                    [ innerDiv
+                    [ singleTicket ticket
                     ]
             else
-                innerDiv
+                singleTicket ticket
           </code></pre>
         </section>
 
@@ -474,6 +483,10 @@
         </section>
 
         <section>
+          <h1>Deployment Issues</h1>
+        </section>
+
+        <section>
           <h2>Deployemnt to Heroku</h2>
           <ul>
             <li>Phoenix deployment to Heroku is as easy as Rails</li>
@@ -535,6 +548,11 @@
             <li>Using channels in Elm is mostly boilerplate code</li>
             <li>Channel events are handled within normal Elm flow</li>
           </ul>
+        </section>
+
+        <section>
+          <h2>Demo</h2>
+          <a href="http://www.dividasaur.us">http://www.dividasaur.us</a>
         </section>
 
         <section>
