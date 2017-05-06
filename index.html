@@ -205,7 +205,7 @@
         <section>
           <h2>Accepting Channel Subscriptions</h2>
           <pre><code class="elixir" data-trim contenteditable>
-            # web/channels/ticket_channel.rb
+            # web/channels/ticket_channel.ex
             def join("dividasaurus:tickets", _payload, socket) do
               {:ok, socket}
             end
@@ -215,7 +215,7 @@
         <section>
           <h2>Handling Channel Events</h2>
           <pre><code class="elixir" data-trim contenteditable>
-            # web/channels/ticket_channel.rb
+            # web/channels/ticket_channel.ex
             def handle_in("ticket_select",
                           %{"user_id" => user_id,
                             "ticket_id" => ticket_id,
@@ -236,7 +236,7 @@
         <section>
           <h2>Broadcasting Results</h2>
           <pre><code class="elixir" data-trim contenteditable>
-            # web/channels/ticket_channel.rb
+            # web/channels/ticket_channel.ex
             defp broadcast_updated_ticket(socket, ticket_id) do
               # Return the updated ticket to all clients
               ticket = Repo.get(Ticket, ticket_id)
